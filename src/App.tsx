@@ -9,6 +9,9 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import CompanyDetail from "./pages/CompanyDetail";
 import NotFound from "./pages/NotFound";
+import Notifications from "./pages/Notifications";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,9 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/company/:id" element={<CompanyDetail />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
