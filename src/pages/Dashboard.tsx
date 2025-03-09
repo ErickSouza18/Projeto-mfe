@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Search, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Bell, Search, PlusCircle, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import CompanyCard from '../components/CompanyCard';
 import IconInput from '../components/IconInput';
@@ -19,7 +19,12 @@ const INITIAL_MOCK_DATA = {
     { id: 5, name: 'Empresa 3', employeeCount: 83, lastUpdate: '13/09/2024', type: 'company' },
     { id: 6, name: 'Cliente 3', employeeCount: 0, lastUpdate: '13/09/2024', type: 'client' },
   ],
-  recentFiles: []
+  recentFiles: [
+    { id: 1, name: 'Relatório Mensal.pdf', recipient: 'Empresa 1', size: '1.2 MB', date: '13/09/2024' },
+    { id: 2, name: 'Contratos 2024.docx', recipient: 'Cliente 2', size: '0.8 MB', date: '12/09/2024' },
+    { id: 3, name: 'Análise Financeira.xlsx', recipient: 'Empresa 3', size: '2.5 MB', date: '10/09/2024' },
+    { id: 4, name: 'Proposta Comercial.pdf', recipient: 'Cliente 1', size: '3.1 MB', date: '08/09/2024' },
+  ]
 };
 
 const Dashboard = () => {
@@ -27,6 +32,7 @@ const Dashboard = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [mockData, setMockData] = useState(INITIAL_MOCK_DATA);
   const [currentPage, setCurrentPage] = useState(1);
+  const [fileSearchQuery, setFileSearchQuery] = useState('');
   const itemsPerPage = 6;
   const navigate = useNavigate();
 
@@ -57,6 +63,38 @@ const Dashboard = () => {
   const goToPreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Filtragem de arquivos recentes
+  const filteredFiles = mockData.recentFiles.filter(file => 
+    file.name.toLowerCase().includes(fileSearchQuery.toLowerCase()) ||
+    file.recipient.toLowerCase().includes(fileSearchQuery.toLowerCase())
+  );
+
+  // Função para adicionar um novo arquivo recente
+  const handleAddFile = () => {
+    const newFile = {
+      id: mockData.recentFiles.length > 0 ? Math.max(...mockData.recentFiles.map(f => f.id)) + 1 : 1,
+      name: `Novo Documento ${new Date().toLocaleTimeString()}.pdf`,
+      recipient: 'Cliente ' + Math.floor(Math.random() * 3 + 1),
+      size: (Math.random() * 4).toFixed(1) + ' MB',
+      date: new Date().toLocaleDateString('pt-BR')
+    };
+    
+    setMockData(prev => ({
+      ...prev,
+      recentFiles: [newFile, ...prev.recentFiles]
+    }));
+    
+    toast.success(`Arquivo "${newFile.name}" adicionado com sucesso!`);
+  };
+
+  // Função para visualizar um arquivo
+  const handleFileClick = (fileId: number) => {
+    const file = mockData.recentFiles.find(f => f.id === fileId);
+    if (file) {
+      toast.info(`Visualizando arquivo: ${file.name}`);
     }
   };
 
@@ -201,7 +239,28 @@ const Dashboard = () => {
           </section>
           
           <section>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Recentes</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Recentes</h2>
+              <div className="flex gap-2">
+                <IconInput 
+                  icon="search"
+                  type="text"
+                  placeholder="Pesquisar arquivos"
+                  value={fileSearchQuery}
+                  onChange={(e) => setFileSearchQuery(e.target.value)}
+                  className="bg-gray-50 w-52"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddFile}
+                  className="flex items-center gap-1"
+                >
+                  <PlusCircle size={16} />
+                  Novo Arquivo
+                </Button>
+              </div>
+            </div>
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
               <table className="w-full">
                 <thead>
@@ -213,16 +272,25 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockData.recentFiles.length === 0 ? (
+                  {filteredFiles.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="py-4 px-4 text-center text-gray-500">
                         Nenhum arquivo recente encontrado
                       </td>
                     </tr>
                   ) : (
-                    mockData.recentFiles.map((file, index) => (
-                      <tr key={index} className="border-b border-gray-200 last:border-0">
-                        <td className="py-3 px-4">{file.name}</td>
+                    filteredFiles.map((file) => (
+                      <tr 
+                        key={file.id} 
+                        className="border-b border-gray-200 last:border-0 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleFileClick(file.id)}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <FileText size={16} className="text-blue-500" />
+                            {file.name}
+                          </div>
+                        </td>
                         <td className="py-3 px-4">{file.recipient}</td>
                         <td className="py-3 px-4">{file.size}</td>
                         <td className="py-3 px-4">{file.date}</td>
