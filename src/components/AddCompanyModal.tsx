@@ -5,9 +5,16 @@ import Button from './Button';
 
 interface AddCompanyModalProps {
   onClose: () => void;
+  onAddCompany: (newCompany: {
+    name: string;
+    cnpj: string;
+    email: string;
+    phone: string;
+    responsibleName: string;
+  }) => void;
 }
 
-const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ onClose }) => {
+const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ onClose, onAddCompany }) => {
   const [activeTab, setActiveTab] = useState<'cadastrar' | 'autenticar'>('cadastrar');
   const [formData, setFormData] = useState({
     name: '',
@@ -25,7 +32,7 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({ onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Formulário enviado:', formData);
-    onClose();
+    onAddCompany(formData);
   };
 
   return (
