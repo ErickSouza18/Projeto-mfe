@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Search, PlusCircle, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
@@ -44,16 +43,13 @@ const Dashboard = () => {
     company.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Calcular número total de páginas
   const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
 
-  // Obter empresas da página atual
   const currentCompanies = filteredCompanies.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Funções de navegação
   const goToNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
@@ -66,13 +62,11 @@ const Dashboard = () => {
     }
   };
 
-  // Filtragem de arquivos recentes
   const filteredFiles = mockData.recentFiles.filter(file => 
     file.name.toLowerCase().includes(fileSearchQuery.toLowerCase()) ||
     file.recipient.toLowerCase().includes(fileSearchQuery.toLowerCase())
   );
 
-  // Função para adicionar um novo arquivo recente
   const handleAddFile = () => {
     const newFile = {
       id: mockData.recentFiles.length > 0 ? Math.max(...mockData.recentFiles.map(f => f.id)) + 1 : 1,
@@ -90,7 +84,6 @@ const Dashboard = () => {
     toast.success(`Arquivo "${newFile.name}" adicionado com sucesso!`);
   };
 
-  // Função para visualizar um arquivo
   const handleFileClick = (fileId: number) => {
     const file = mockData.recentFiles.find(f => f.id === fileId);
     if (file) {
@@ -98,7 +91,6 @@ const Dashboard = () => {
     }
   };
 
-  // Função para adicionar nova empresa
   const handleAddCompany = (newCompany: {
     name: string;
     cnpj: string;
@@ -131,17 +123,12 @@ const Dashboard = () => {
     navigate('/notifications');
   };
 
-  const handleSettingsClick = () => {
-    navigate('/settings');
-  };
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar />
       
       <div className="flex-1 ml-80">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between">
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4 px-6 flex items-center justify-between">
           <div className="w-full max-w-md">
             <IconInput 
               icon="search"
@@ -149,30 +136,19 @@ const Dashboard = () => {
               placeholder="Pesquisar"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-gray-50"
+              className="bg-gray-50 dark:bg-gray-700"
             />
           </div>
           
           <div className="flex items-center gap-5">
             <button 
-              className="relative text-gray-600 hover:text-gray-900"
+              className="relative text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
               onClick={handleNotificationClick}
             >
               <Bell size={20} />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                 1
               </span>
-            </button>
-            
-            <button 
-              className="text-gray-600 hover:text-gray-900"
-              onClick={handleSettingsClick}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="currentColor"/>
-                <path d="M20 15C21.1046 15 22 14.1046 22 13C22 11.8954 21.1046 11 20 11C18.8954 11 18 11.8954 18 13C18 14.1046 18.8954 15 20 15Z" fill="currentColor"/>
-                <path d="M4 15C5.10457 15 6 14.1046 6 13C6 11.8954 5.10457 11 4 11C2.89543 11 2 11.8954 2 13C2 14.1046 2.89543 15 4 15Z" fill="currentColor"/>
-              </svg>
             </button>
             
             <Button 
@@ -187,10 +163,9 @@ const Dashboard = () => {
           </div>
         </header>
         
-        {/* Main content */}
-        <main className="py-6 px-6">
+        <main className="py-6 px-6 dark:text-gray-100">
           <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Clientes e Empresas</h2>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Clientes e Empresas</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {currentCompanies.map((company) => (
                 <CompanyCard
@@ -204,7 +179,6 @@ const Dashboard = () => {
               ))}
             </div>
             
-            {/* Paginação */}
             {totalPages > 1 && (
               <div className="flex justify-center mt-6 gap-2">
                 <Button
@@ -218,9 +192,9 @@ const Dashboard = () => {
                   Anterior
                 </Button>
                 
-                <div className="flex items-center px-3 py-1.5 bg-gray-100 rounded text-sm">
+                <div className="flex items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-sm">
                   <span className="font-medium">{currentPage}</span>
-                  <span className="mx-1 text-gray-500">/</span>
+                  <span className="mx-1 text-gray-500 dark:text-gray-400">/</span>
                   <span>{totalPages}</span>
                 </div>
                 
@@ -240,7 +214,7 @@ const Dashboard = () => {
           
           <section>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Recentes</h2>
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Recentes</h2>
               <div className="flex gap-2">
                 <IconInput 
                   icon="search"
@@ -248,33 +222,24 @@ const Dashboard = () => {
                   placeholder="Pesquisar arquivos"
                   value={fileSearchQuery}
                   onChange={(e) => setFileSearchQuery(e.target.value)}
-                  className="bg-gray-50 w-52"
+                  className="bg-gray-50 dark:bg-gray-700 w-52"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddFile}
-                  className="flex items-center gap-1"
-                >
-                  <PlusCircle size={16} />
-                  Novo Arquivo
-                </Button>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Nome do Arquivo</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Destinatário</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Tamanho</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Data</th>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Nome do Arquivo</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Destinatário</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Tamanho</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Data</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredFiles.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-4 px-4 text-center text-gray-500">
+                      <td colSpan={4} className="py-4 px-4 text-center text-gray-500 dark:text-gray-400">
                         Nenhum arquivo recente encontrado
                       </td>
                     </tr>
@@ -282,7 +247,7 @@ const Dashboard = () => {
                     filteredFiles.map((file) => (
                       <tr 
                         key={file.id} 
-                        className="border-b border-gray-200 last:border-0 hover:bg-gray-50 cursor-pointer"
+                        className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                         onClick={() => handleFileClick(file.id)}
                       >
                         <td className="py-3 px-4">

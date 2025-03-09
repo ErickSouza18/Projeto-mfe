@@ -6,7 +6,7 @@ import Button from '../components/Button';
 import IconInput from '../components/IconInput';
 import { toast } from 'sonner';
 
-// Dados ficticios do usuário
+// Dados ficticios do usuário - matched with Sidebar
 const MOCK_USER = {
   name: 'João Silva',
   email: 'joao.silva@escritoriox.com',

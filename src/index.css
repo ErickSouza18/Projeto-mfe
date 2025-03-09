@@ -80,7 +80,7 @@
 
 /* Glassmorphism effect */
 .glass-card {
-  @apply bg-white/90 backdrop-blur-sm shadow-lg border border-white/20;
+  @apply bg-white/90 dark:bg-black/50 backdrop-blur-sm shadow-lg border border-white/20 dark:border-white/10;
 }
 
 .sidebar {
@@ -93,7 +93,7 @@
 
 /* Custom input styles */
 .input-animated {
-  @apply transition-all duration-300 border border-gray-300 rounded-md p-3 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  @apply transition-all duration-300 border border-gray-300 dark:border-gray-600 rounded-md p-3 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
 }
 
 /* Card hover effects */
