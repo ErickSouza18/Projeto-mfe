@@ -120,6 +120,59 @@
     @apply text-gray-400;
   }
   
+  /* Improved button contrast in dark mode */
+  .dark .bg-gray-100 {
+    @apply bg-gray-700 text-white;
+  }
+  
+  .dark .bg-gray-200 {
+    @apply bg-gray-600 text-white;
+  }
+  
+  .dark button.bg-gray-200 {
+    @apply hover:bg-gray-500;
+  }
+  
+  .dark .btn-secondary {
+    @apply bg-gray-700 hover:bg-gray-600 text-white;
+  }
+  
+  /* Animation classes */
+  .fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+  }
+  
+  .scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200;
+  }
+  
+  .hover-scale:hover {
+    @apply transform scale-105;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes scaleIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus {

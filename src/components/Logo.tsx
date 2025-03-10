@@ -15,7 +15,7 @@ const Logo = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg', clas
         <div className="absolute left-0.5 top-0.5 w-[95%] h-[95%] bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg transform"></div>
       </div>
       <div className="absolute inset-0 flex items-center justify-center font-bold text-white text-center">
-        <span className="text-xl">MFA</span>
+        <span className="text-xl">EGE</span>
       </div>
     </div>
   );

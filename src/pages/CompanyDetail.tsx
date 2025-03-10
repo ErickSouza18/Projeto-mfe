@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, PlusCircle, Edit, Save, X, FileText } from 'lucide-react';
+import { ArrowLeft, Upload, PlusCircle, Edit, Save, X, FileText, Eye, Download, Pencil } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
 import { toast } from 'sonner';
@@ -33,6 +33,9 @@ const CompanyDetail = () => {
   const [showNewFileModal, setShowNewFileModal] = useState(false);
   const [newFileName, setNewFileName] = useState('');
   const [newFileType, setNewFileType] = useState('');
+  const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
+  const [currentFile, setCurrentFile] = useState<any>(null);
+  const [isEditingFileName, setIsEditingFileName] = useState(false);
   
   // Load files from localStorage if they exist
   useEffect(() => {
@@ -120,17 +123,42 @@ const CompanyDetail = () => {
     }
   };
   
+  const handleViewFile = (file: any) => {
+    setCurrentFile(file);
+    setShowFilePreviewModal(true);
+  };
+  
+  const handleDownloadFile = (file: any) => {
+    // In a real app, this would trigger the actual file download
+    toast.success(`Arquivo "${file.name}" baixado com sucesso!`);
+  };
+  
+  const handleUpdateFileName = () => {
+    if (!currentFile) return;
+    
+    const updatedFiles = uploadedFiles.map(file => {
+      if (file.id === currentFile.id) {
+        return { ...file, name: currentFile.name };
+      }
+      return file;
+    });
+    
+    setUploadedFiles(updatedFiles);
+    setIsEditingFileName(false);
+    toast.success('Nome do arquivo atualizado com sucesso!');
+  };
+  
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar />
       
       <div className="flex-1 ml-80">
         {/* Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4 px-6 flex items-center justify-between">
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4 px-6 flex items-center justify-between animate-fade-in">
           <div className="flex items-center">
             <button 
               onClick={handleGoBack}
-              className="mr-4 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              className="mr-4 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors hover-scale"
             >
               <ArrowLeft size={20} />
             </button>
@@ -141,7 +169,7 @@ const CompanyDetail = () => {
             variant={isEditing ? "danger" : "primary"}
             size="sm"
             onClick={toggleEditMode}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 hover-scale"
           >
             {isEditing ? (
               <>
@@ -159,7 +187,7 @@ const CompanyDetail = () => {
         
         {/* Main content */}
         <main className="py-6 px-6 dark:text-gray-100">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6 fade-in animate-slide-in">
             <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Envio de Arquivos</h2>
             
             {/* Document type selector */}
@@ -208,7 +236,7 @@ const CompanyDetail = () => {
             <div className="border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 flex flex-col items-center justify-center">
               <Button
                 variant="primary"
-                className="mb-4 flex items-center gap-2"
+                className="mb-4 flex items-center gap-2 hover-scale"
                 onClick={handleAddFile}
               >
                 <PlusCircle size={18} />
@@ -216,7 +244,7 @@ const CompanyDetail = () => {
               </Button>
               <Button
                 variant="secondary"
-                className="mb-4 flex items-center gap-2"
+                className="mb-4 flex items-center gap-2 hover-scale"
               >
                 <Upload size={18} />
                 Enviar Arquivos
@@ -226,7 +254,7 @@ const CompanyDetail = () => {
           </div>
           
           {/* Files table */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 fade-in animate-slide-in" style={{ animationDelay: '0.1s' }}>
             <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Arquivos Enviados</h2>
             
             <div className="overflow-x-auto">
@@ -237,19 +265,19 @@ const CompanyDetail = () => {
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Tipo</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Data de Envio</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Tamanho</th>
-                    {isEditing && <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Ações</th>}
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {uploadedFiles.length === 0 ? (
                     <tr>
-                      <td colSpan={isEditing ? 5 : 4} className="py-4 px-4 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={5} className="py-4 px-4 text-center text-gray-500 dark:text-gray-400">
                         Nenhum arquivo enviado ainda
                       </td>
                     </tr>
                   ) : (
                     uploadedFiles.map(file => (
-                      <tr key={file.id} className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <tr key={file.id} className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover-scale">
                         <td className="py-3 px-4 dark:text-gray-300">
                           <div className="flex items-center gap-2">
                             <FileText size={16} className="text-blue-500" />
@@ -261,16 +289,44 @@ const CompanyDetail = () => {
                         </td>
                         <td className="py-3 px-4 dark:text-gray-300">{file.date}</td>
                         <td className="py-3 px-4 dark:text-gray-300">{file.size}</td>
-                        {isEditing && (
-                          <td className="py-3 px-4">
-                            <button 
-                              className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
-                              onClick={() => handleDeleteFile(file.id)}
-                            >
-                              <X size={16} />
-                            </button>
-                          </td>
-                        )}
+                        <td className="py-3 px-4 flex gap-2">
+                          <button 
+                            className="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                            onClick={() => handleViewFile(file)}
+                            title="Visualizar arquivo"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button 
+                            className="text-green-500 hover:text-green-700 dark:hover:text-green-400 transition-colors"
+                            onClick={() => handleDownloadFile(file)}
+                            title="Baixar arquivo"
+                          >
+                            <Download size={16} />
+                          </button>
+                          {isEditing && (
+                            <>
+                              <button 
+                                className="text-orange-500 hover:text-orange-700 dark:hover:text-orange-400 transition-colors"
+                                onClick={() => {
+                                  setCurrentFile(file);
+                                  setIsEditingFileName(true);
+                                  setShowFilePreviewModal(true);
+                                }}
+                                title="Editar arquivo"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button 
+                                className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                                onClick={() => handleDeleteFile(file.id)}
+                                title="Excluir arquivo"
+                              >
+                                <X size={16} />
+                              </button>
+                            </>
+                          )}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -283,10 +339,10 @@ const CompanyDetail = () => {
       
       {/* New File Modal */}
       {showNewFileModal && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative animate-scale-in">
             <button 
-              className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover-scale"
               onClick={() => setShowNewFileModal(false)}
             >
               <X size={20} />
@@ -329,16 +385,109 @@ const CompanyDetail = () => {
                 <Button
                   variant="secondary"
                   onClick={() => setShowNewFileModal(false)}
+                  className="hover-scale"
                 >
                   Cancelar
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleCreateNewFile}
+                  className="hover-scale"
                 >
                   Criar Arquivo
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* File Preview Modal */}
+      {showFilePreviewModal && currentFile && (
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl p-6 relative animate-scale-in">
+            <button 
+              className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover-scale"
+              onClick={() => {
+                setShowFilePreviewModal(false);
+                setIsEditingFileName(false);
+              }}
+            >
+              <X size={20} />
+            </button>
+            
+            <h3 className="text-lg font-medium mb-4 dark:text-white flex items-center gap-3">
+              <FileText size={20} className="text-blue-500" />
+              {isEditingFileName ? (
+                <input 
+                  type="text"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  value={currentFile.name}
+                  onChange={(e) => setCurrentFile({...currentFile, name: e.target.value})}
+                  autoFocus
+                />
+              ) : (
+                <span>{currentFile.name}</span>
+              )}
+              {isEditing && !isEditingFileName && (
+                <button 
+                  className="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 ml-2"
+                  onClick={() => setIsEditingFileName(true)}
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
+            </h3>
+            
+            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-4 min-h-[300px] flex items-center justify-center">
+              <div className="text-center">
+                <FileText size={64} className="mx-auto mb-4 text-blue-500" />
+                <p className="text-gray-600 dark:text-gray-300">Visualização de arquivo indisponível</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Tipo: {DOCUMENT_TYPES.find(t => t.id === currentFile.type)?.label}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-3 justify-end">
+              {isEditingFileName && (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsEditingFileName(false)}
+                    className="hover-scale"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleUpdateFileName}
+                    className="hover-scale"
+                  >
+                    Salvar Nome
+                  </Button>
+                </>
+              )}
+              
+              {!isEditingFileName && (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleDownloadFile(currentFile)}
+                    className="flex items-center gap-2 hover-scale"
+                  >
+                    <Download size={16} />
+                    Baixar
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => setShowFilePreviewModal(false)}
+                    className="hover-scale"
+                  >
+                    Fechar
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
