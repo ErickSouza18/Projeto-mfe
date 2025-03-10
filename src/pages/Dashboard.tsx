@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Search, PlusCircle, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
@@ -19,21 +20,50 @@ const INITIAL_MOCK_DATA = {
     { id: 6, name: 'Cliente 3', employeeCount: 0, lastUpdate: '13/09/2024', type: 'client' },
   ],
   recentFiles: [
-    { id: 1, name: 'Relatório Mensal.pdf', recipient: 'Empresa 1', size: '1.2 MB', date: '13/09/2024' },
-    { id: 2, name: 'Contratos 2024.docx', recipient: 'Cliente 2', size: '0.8 MB', date: '12/09/2024' },
-    { id: 3, name: 'Análise Financeira.xlsx', recipient: 'Empresa 3', size: '2.5 MB', date: '10/09/2024' },
-    { id: 4, name: 'Proposta Comercial.pdf', recipient: 'Cliente 1', size: '3.1 MB', date: '08/09/2024' },
+    { id: 1, name: 'Relatório Mensal.pdf', recipient: 'Empresa 1', size: '1.2 MB', date: '13/09/2024', companyId: 1 },
+    { id: 2, name: 'Contratos 2024.docx', recipient: 'Cliente 2', size: '0.8 MB', date: '12/09/2024', companyId: 4 },
+    { id: 3, name: 'Análise Financeira.xlsx', recipient: 'Empresa 3', size: '2.5 MB', date: '10/09/2024', companyId: 5 },
+    { id: 4, name: 'Proposta Comercial.pdf', recipient: 'Cliente 1', size: '3.1 MB', date: '08/09/2024', companyId: 2 },
   ]
+};
+
+// Helper function to find company ID from name
+const findCompanyIdByName = (companies: any[], name: string) => {
+  const company = companies.find(c => c.name === name);
+  return company?.id || 1; // Default to first company if not found
 };
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [mockData, setMockData] = useState(INITIAL_MOCK_DATA);
+  const [mockData, setMockData] = useState(() => {
+    // Add companyId to recentFiles if not present
+    const data = {...INITIAL_MOCK_DATA};
+    data.recentFiles = data.recentFiles.map(file => {
+      if (!file.companyId) {
+        return {
+          ...file,
+          companyId: findCompanyIdByName(data.companies, file.recipient)
+        };
+      }
+      return file;
+    });
+    return data;
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [fileSearchQuery, setFileSearchQuery] = useState('');
   const itemsPerPage = 6;
   const navigate = useNavigate();
+
+  // Initialize dark mode on mount
+  useEffect(() => {
+    const savedMode = localStorage.getItem('darkMode');
+    if (savedMode === 'true') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
   const handleCompanyClick = (id: number) => {
     navigate(`/company/${id}`);
@@ -67,26 +97,31 @@ const Dashboard = () => {
     file.recipient.toLowerCase().includes(fileSearchQuery.toLowerCase())
   );
 
-  const handleAddFile = () => {
-    const newFile = {
-      id: mockData.recentFiles.length > 0 ? Math.max(...mockData.recentFiles.map(f => f.id)) + 1 : 1,
-      name: `Novo Documento ${new Date().toLocaleTimeString()}.pdf`,
-      recipient: 'Cliente ' + Math.floor(Math.random() * 3 + 1),
-      size: (Math.random() * 4).toFixed(1) + ' MB',
-      date: new Date().toLocaleDateString('pt-BR')
-    };
-    
-    setMockData(prev => ({
-      ...prev,
-      recentFiles: [newFile, ...prev.recentFiles]
-    }));
-    
-    toast.success(`Arquivo "${newFile.name}" adicionado com sucesso!`);
-  };
-
   const handleFileClick = (fileId: number) => {
     const file = mockData.recentFiles.find(f => f.id === fileId);
     if (file) {
+      // Save file to company's files in localStorage
+      const companyId = file.companyId;
+      const companyFiles = JSON.parse(localStorage.getItem(`company_${companyId}_files`) || '[]');
+      
+      // Check if file already exists in company files
+      const existingFileIndex = companyFiles.findIndex((f: any) => f.name === file.name);
+      
+      if (existingFileIndex === -1) {
+        // Add file to company files if it doesn't exist
+        const newFile = {
+          id: companyFiles.length > 0 ? Math.max(...companyFiles.map((f: any) => f.id)) + 1 : 1,
+          name: file.name,
+          type: 'documentos', // Default type
+          date: file.date,
+          size: file.size
+        };
+        
+        localStorage.setItem(`company_${companyId}_files`, JSON.stringify([...companyFiles, newFile]));
+      }
+      
+      // Navigate to company detail page
+      navigate(`/company/${companyId}`);
       toast.info(`Visualizando arquivo: ${file.name}`);
     }
   };
@@ -250,15 +285,15 @@ const Dashboard = () => {
                         className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                         onClick={() => handleFileClick(file.id)}
                       >
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 dark:text-gray-300">
                           <div className="flex items-center gap-2">
                             <FileText size={16} className="text-blue-500" />
                             {file.name}
                           </div>
                         </td>
-                        <td className="py-3 px-4">{file.recipient}</td>
-                        <td className="py-3 px-4">{file.size}</td>
-                        <td className="py-3 px-4">{file.date}</td>
+                        <td className="py-3 px-4 dark:text-gray-300">{file.recipient}</td>
+                        <td className="py-3 px-4 dark:text-gray-300">{file.size}</td>
+                        <td className="py-3 px-4 dark:text-gray-300">{file.date}</td>
                       </tr>
                     ))
                   )}

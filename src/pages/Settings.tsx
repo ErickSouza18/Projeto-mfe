@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Bell, Moon, Sun, Globe, Shield, Users, Share2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
@@ -13,7 +13,10 @@ const Settings = () => {
     marketing: false
   });
   
-  const [appearance, setAppearance] = useState('light');
+  const [appearance, setAppearance] = useState(() => {
+    const savedMode = localStorage.getItem('darkMode');
+    return savedMode === 'true' ? 'dark' : 'light';
+  });
   const [language, setLanguage] = useState('pt-BR');
   
   const [privacy, setPrivacy] = useState({
@@ -26,6 +29,17 @@ const Settings = () => {
     deleteDocuments: false,
     manageUsers: true
   });
+  
+  // Apply dark mode on component mount and when appearance changes
+  useEffect(() => {
+    if (appearance === 'dark') {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else if (appearance === 'light') {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }, [appearance]);
   
   const handleToggle = (category: string, setting: string) => {
     switch(category) {
@@ -52,6 +66,7 @@ const Settings = () => {
   
   const handleAppearanceChange = (mode: string) => {
     setAppearance(mode);
+    toast.success(`Modo ${mode === 'dark' ? 'escuro' : 'claro'} ativado`);
   };
   
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -63,27 +78,27 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar />
       
       <div className="flex-1 ml-80">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center">
-          <SettingsIcon className="h-5 w-5 text-gray-700 mr-2" />
-          <h1 className="text-xl font-semibold">Configurações</h1>
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4 px-6 flex items-center">
+          <SettingsIcon className="h-5 w-5 text-gray-700 dark:text-gray-300 mr-2" />
+          <h1 className="text-xl font-semibold dark:text-white">Configurações</h1>
         </header>
         
         {/* Main content */}
         <main className="py-6 px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Sidebar de navegação de configurações */}
-            <div className="md:col-span-1 bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+            <div className="md:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-4">
               <nav className="space-y-1">
-                <a href="#notifications" className="flex items-center py-2 px-3 rounded-md bg-blue-50 text-blue-600">
+                <a href="#notifications" className="flex items-center py-2 px-3 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
                   <Bell className="h-5 w-5 mr-2" />
                   <span>Notificações</span>
                 </a>
-                <a href="#appearance" className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-50">
+                <a href="#appearance" className="flex items-center py-2 px-3 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <Sun className="h-5 w-5 mr-2" />
                   <span>Aparência</span>
                 </a>
@@ -109,8 +124,8 @@ const Settings = () => {
             {/* Conteúdo das configurações */}
             <div className="md:col-span-3 space-y-6">
               {/* Notificações */}
-              <div id="notifications" className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h2 className="text-lg font-medium mb-4 flex items-center">
+              <div id="notifications" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-medium mb-4 flex items-center dark:text-white">
                   <Bell className="h-5 w-5 mr-2 text-blue-500" />
                   Notificações
                 </h2>
@@ -214,40 +229,40 @@ const Settings = () => {
               </div>
               
               {/* Aparência */}
-              <div id="appearance" className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h2 className="text-lg font-medium mb-4 flex items-center">
+              <div id="appearance" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-medium mb-4 flex items-center dark:text-white">
                   <Sun className="h-5 w-5 mr-2 text-blue-500" />
                   Aparência
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-medium mb-3">Tema</h3>
+                    <h3 className="font-medium mb-3 dark:text-white">Tema</h3>
                     <div className="flex gap-4">
                       <div 
-                        className={`flex flex-col items-center cursor-pointer ${appearance === 'light' ? 'text-blue-500' : 'text-gray-500'}`}
+                        className={`flex flex-col items-center cursor-pointer ${appearance === 'light' ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`}
                         onClick={() => handleAppearanceChange('light')}
                       >
-                        <div className={`w-16 h-16 rounded-lg bg-white border-2 flex items-center justify-center ${appearance === 'light' ? 'border-blue-500' : 'border-gray-200'}`}>
+                        <div className={`w-16 h-16 rounded-lg bg-white border-2 flex items-center justify-center ${appearance === 'light' ? 'border-blue-500' : 'border-gray-200 dark:border-gray-600'}`}>
                           <Sun className="h-8 w-8" />
                         </div>
                         <span className="mt-2">Claro</span>
                       </div>
                       
                       <div 
-                        className={`flex flex-col items-center cursor-pointer ${appearance === 'dark' ? 'text-blue-500' : 'text-gray-500'}`}
+                        className={`flex flex-col items-center cursor-pointer ${appearance === 'dark' ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`}
                         onClick={() => handleAppearanceChange('dark')}
                       >
-                        <div className={`w-16 h-16 rounded-lg bg-gray-800 border-2 flex items-center justify-center ${appearance === 'dark' ? 'border-blue-500' : 'border-gray-200'}`}>
+                        <div className={`w-16 h-16 rounded-lg bg-gray-800 border-2 flex items-center justify-center ${appearance === 'dark' ? 'border-blue-500' : 'border-gray-200 dark:border-gray-600'}`}>
                           <Moon className="h-8 w-8 text-white" />
                         </div>
                         <span className="mt-2">Escuro</span>
                       </div>
                       
                       <div 
-                        className={`flex flex-col items-center cursor-pointer ${appearance === 'system' ? 'text-blue-500' : 'text-gray-500'}`}
+                        className={`flex flex-col items-center cursor-pointer ${appearance === 'system' ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`}
                         onClick={() => handleAppearanceChange('system')}
                       >
-                        <div className={`w-16 h-16 rounded-lg bg-gradient-to-br from-white to-gray-800 border-2 flex items-center justify-center ${appearance === 'system' ? 'border-blue-500' : 'border-gray-200'}`}>
+                        <div className={`w-16 h-16 rounded-lg bg-gradient-to-br from-white to-gray-800 border-2 flex items-center justify-center ${appearance === 'system' ? 'border-blue-500' : 'border-gray-200 dark:border-gray-600'}`}>
                           <Sun className="h-6 w-6 text-yellow-500 -translate-x-1" />
                           <Moon className="h-6 w-6 text-blue-300 translate-x-1" />
                         </div>

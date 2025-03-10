@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, PlusCircle, Edit, Save, X } from 'lucide-react';
+import { ArrowLeft, Upload, PlusCircle, Edit, Save, X, FileText } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
 import { toast } from 'sonner';
@@ -30,6 +30,22 @@ const CompanyDetail = () => {
     date: string,
     size: string
   }>>([]);
+  const [showNewFileModal, setShowNewFileModal] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
+  const [newFileType, setNewFileType] = useState('');
+  
+  // Load files from localStorage if they exist
+  useEffect(() => {
+    const savedFiles = localStorage.getItem(`company_${id}_files`);
+    if (savedFiles) {
+      setUploadedFiles(JSON.parse(savedFiles));
+    }
+  }, [id]);
+  
+  // Save files to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem(`company_${id}_files`, JSON.stringify(uploadedFiles));
+  }, [uploadedFiles, id]);
   
   // In a real app, you would fetch company data based on the ID
   const companyName = `Empresa ${id}`;
@@ -59,19 +75,40 @@ const CompanyDetail = () => {
   const selectedType = DOCUMENT_TYPES.find(t => t.id === selectedDocType);
   
   const handleAddFile = () => {
-    const fileExtensions = ['.pdf', '.docx', '.xlsx', '.jpg'];
-    const randomExt = fileExtensions[Math.floor(Math.random() * fileExtensions.length)];
+    setShowNewFileModal(true);
+  };
+  
+  const handleCreateNewFile = () => {
+    if (!newFileName.trim()) {
+      toast.error('Por favor, insira um nome para o arquivo');
+      return;
+    }
+    
+    // Add file extension if not provided
+    let fileName = newFileName;
+    if (!fileName.includes('.')) {
+      fileName += '.pdf';
+    }
     
     const newFile = {
       id: uploadedFiles.length > 0 ? Math.max(...uploadedFiles.map(f => f.id)) + 1 : 1,
-      name: `Documento_${new Date().getTime()}${randomExt}`,
-      type: selectedDocType,
+      name: fileName,
+      type: newFileType || selectedDocType,
       date: new Date().toLocaleDateString('pt-BR'),
       size: (Math.random() * 5).toFixed(1) + ' MB'
     };
     
     setUploadedFiles([...uploadedFiles, newFile]);
+    setShowNewFileModal(false);
+    setNewFileName('');
+    setNewFileType('');
     toast.success(`Arquivo "${newFile.name}" adicionado com sucesso!`);
+  };
+  
+  const handleDeleteFile = (fileId: number) => {
+    const fileToDelete = uploadedFiles.find(f => f.id === fileId);
+    setUploadedFiles(uploadedFiles.filter(f => f.id !== fileId));
+    toast.success(`Arquivo "${fileToDelete?.name}" removido com sucesso!`);
   };
   
   const toggleEditMode = () => {
@@ -213,7 +250,12 @@ const CompanyDetail = () => {
                   ) : (
                     uploadedFiles.map(file => (
                       <tr key={file.id} className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td className="py-3 px-4 dark:text-gray-300">{file.name}</td>
+                        <td className="py-3 px-4 dark:text-gray-300">
+                          <div className="flex items-center gap-2">
+                            <FileText size={16} className="text-blue-500" />
+                            {file.name}
+                          </div>
+                        </td>
                         <td className="py-3 px-4 dark:text-gray-300">
                           {DOCUMENT_TYPES.find(t => t.id === file.type)?.label.split(' ')[0]}
                         </td>
@@ -223,10 +265,7 @@ const CompanyDetail = () => {
                           <td className="py-3 px-4">
                             <button 
                               className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
-                              onClick={() => {
-                                setUploadedFiles(uploadedFiles.filter(f => f.id !== file.id));
-                                toast.success(`Arquivo "${file.name}" removido com sucesso!`);
-                              }}
+                              onClick={() => handleDeleteFile(file.id)}
                             >
                               <X size={16} />
                             </button>
@@ -241,6 +280,69 @@ const CompanyDetail = () => {
           </div>
         </main>
       </div>
+      
+      {/* New File Modal */}
+      {showNewFileModal && (
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+            <button 
+              className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              onClick={() => setShowNewFileModal(false)}
+            >
+              <X size={20} />
+            </button>
+            
+            <h3 className="text-lg font-medium mb-4 dark:text-white">Novo Arquivo</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Nome do Arquivo
+                </label>
+                <input 
+                  type="text"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  value={newFileName}
+                  onChange={(e) => setNewFileName(e.target.value)}
+                  placeholder="Ex: Contrato Social"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Tipo de Documento
+                </label>
+                <select
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  value={newFileType || selectedDocType}
+                  onChange={(e) => setNewFileType(e.target.value)}
+                >
+                  {DOCUMENT_TYPES.map(type => (
+                    <option key={type.id} value={type.id}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowNewFileModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleCreateNewFile}
+                >
+                  Criar Arquivo
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

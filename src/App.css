@@ -45,3 +45,8 @@
 .dark .read-the-docs {
   color: #aaa;
 }
+
+/* Fix for dark mode modals */
+.dark .fixed.inset-0 {
+  background-color: rgba(0, 0, 0, 0.7);
+}
