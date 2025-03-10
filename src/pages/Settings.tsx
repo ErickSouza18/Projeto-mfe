@@ -4,8 +4,11 @@ import { Settings as SettingsIcon, Bell, Moon, Sun, Globe, Shield, Users, Share2
 import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
 import { toast } from 'sonner';
+import { useLanguage } from '../context/LanguageContext';
 
 const Settings = () => {
+  const { language, setLanguage, t } = useLanguage();
+  
   const [notifications, setNotifications] = useState({
     email: true,
     app: true,
@@ -17,7 +20,6 @@ const Settings = () => {
     const savedMode = localStorage.getItem('darkMode');
     return savedMode === 'true' ? 'dark' : 'light';
   });
-  const [language, setLanguage] = useState('pt-BR');
   
   const [privacy, setPrivacy] = useState({
     shareData: false,
@@ -66,15 +68,20 @@ const Settings = () => {
   
   const handleAppearanceChange = (mode: string) => {
     setAppearance(mode);
-    toast.success(`Modo ${mode === 'dark' ? 'escuro' : 'claro'} ativado`);
+    const themeText = mode === 'dark' 
+      ? t('toast.theme.dark') 
+      : mode === 'light' 
+        ? t('toast.theme.light') 
+        : t('toast.theme.system');
+    toast.success(`${t('toast.theme.changed')}${themeText}`);
   };
   
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLanguage(e.target.value);
+    setLanguage(e.target.value as 'pt-BR' | 'en-US' | 'es' | 'fr');
   };
   
   const handleSaveSettings = () => {
-    toast.success('Configurações salvas com sucesso!');
+    toast.success(t('toast.settings.saved'));
   };
 
   return (
@@ -85,7 +92,7 @@ const Settings = () => {
         {/* Header */}
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4 px-6 flex items-center">
           <SettingsIcon className="h-5 w-5 text-gray-700 dark:text-gray-300 mr-2" />
-          <h1 className="text-xl font-semibold dark:text-white">Configurações</h1>
+          <h1 className="text-xl font-semibold dark:text-white">{t('settings.title')}</h1>
         </header>
         
         {/* Main content */}
@@ -96,27 +103,27 @@ const Settings = () => {
               <nav className="space-y-1">
                 <a href="#notifications" className="flex items-center py-2 px-3 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
                   <Bell className="h-5 w-5 mr-2" />
-                  <span>Notificações</span>
+                  <span>{t('settings.notifications')}</span>
                 </a>
                 <a href="#appearance" className="flex items-center py-2 px-3 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <Sun className="h-5 w-5 mr-2" />
-                  <span>Aparência</span>
+                  <span>{t('settings.appearance')}</span>
                 </a>
-                <a href="#language" className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-50">
+                <a href="#language" className="flex items-center py-2 px-3 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <Globe className="h-5 w-5 mr-2" />
-                  <span>Idioma</span>
+                  <span>{t('settings.language')}</span>
                 </a>
-                <a href="#privacy" className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-50">
+                <a href="#privacy" className="flex items-center py-2 px-3 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <Shield className="h-5 w-5 mr-2" />
-                  <span>Privacidade</span>
+                  <span>{t('settings.privacy')}</span>
                 </a>
-                <a href="#permissions" className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-50">
+                <a href="#permissions" className="flex items-center py-2 px-3 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <Users className="h-5 w-5 mr-2" />
-                  <span>Permissões</span>
+                  <span>{t('settings.permissions')}</span>
                 </a>
-                <a href="#share" className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-50">
+                <a href="#share" className="flex items-center py-2 px-3 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <Share2 className="h-5 w-5 mr-2" />
-                  <span>Compartilhamento</span>
+                  <span>{t('settings.sharing')}</span>
                 </a>
               </nav>
             </div>
@@ -127,13 +134,13 @@ const Settings = () => {
               <div id="notifications" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                 <h2 className="text-lg font-medium mb-4 flex items-center dark:text-white">
                   <Bell className="h-5 w-5 mr-2 text-blue-500" />
-                  Notificações
+                  {t('settings.notifications')}
                 </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Notificações por email</h3>
-                      <p className="text-sm text-gray-500">Receba atualizações por email</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.email.notifications')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.email.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -145,7 +152,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="email-notifications"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${notifications.email ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${notifications.email ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${notifications.email ? 'transform translate-x-6' : ''}`} 
@@ -156,8 +163,8 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Notificações no aplicativo</h3>
-                      <p className="text-sm text-gray-500">Receba atualizações dentro do sistema</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.app.notifications')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.app.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -169,7 +176,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="app-notifications"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${notifications.app ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${notifications.app ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${notifications.app ? 'transform translate-x-6' : ''}`} 
@@ -180,8 +187,8 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Atualizações do sistema</h3>
-                      <p className="text-sm text-gray-500">Receba notificações sobre atualizações do sistema</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.updates')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.updates.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -193,7 +200,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="updates-notifications"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${notifications.updates ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${notifications.updates ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${notifications.updates ? 'transform translate-x-6' : ''}`} 
@@ -204,8 +211,8 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Comunicações de marketing</h3>
-                      <p className="text-sm text-gray-500">Receba notificações sobre novas funcionalidades</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.marketing')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.marketing.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -217,7 +224,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="marketing-notifications"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${notifications.marketing ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${notifications.marketing ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${notifications.marketing ? 'transform translate-x-6' : ''}`} 
@@ -232,11 +239,11 @@ const Settings = () => {
               <div id="appearance" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                 <h2 className="text-lg font-medium mb-4 flex items-center dark:text-white">
                   <Sun className="h-5 w-5 mr-2 text-blue-500" />
-                  Aparência
+                  {t('settings.appearance')}
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-medium mb-3 dark:text-white">Tema</h3>
+                    <h3 className="font-medium mb-3 dark:text-white">{t('settings.theme')}</h3>
                     <div className="flex gap-4">
                       <div 
                         className={`flex flex-col items-center cursor-pointer ${appearance === 'light' ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`}
@@ -245,7 +252,7 @@ const Settings = () => {
                         <div className={`w-16 h-16 rounded-lg bg-white border-2 flex items-center justify-center ${appearance === 'light' ? 'border-blue-500' : 'border-gray-200 dark:border-gray-600'}`}>
                           <Sun className="h-8 w-8" />
                         </div>
-                        <span className="mt-2">Claro</span>
+                        <span className="mt-2">{t('settings.theme.light')}</span>
                       </div>
                       
                       <div 
@@ -255,7 +262,7 @@ const Settings = () => {
                         <div className={`w-16 h-16 rounded-lg bg-gray-800 border-2 flex items-center justify-center ${appearance === 'dark' ? 'border-blue-500' : 'border-gray-200 dark:border-gray-600'}`}>
                           <Moon className="h-8 w-8 text-white" />
                         </div>
-                        <span className="mt-2">Escuro</span>
+                        <span className="mt-2">{t('settings.theme.dark')}</span>
                       </div>
                       
                       <div 
@@ -266,7 +273,7 @@ const Settings = () => {
                           <Sun className="h-6 w-6 text-yellow-500 -translate-x-1" />
                           <Moon className="h-6 w-6 text-blue-300 translate-x-1" />
                         </div>
-                        <span className="mt-2">Sistema</span>
+                        <span className="mt-2">{t('settings.theme.system')}</span>
                       </div>
                     </div>
                   </div>
@@ -274,39 +281,39 @@ const Settings = () => {
               </div>
               
               {/* Idioma */}
-              <div id="language" className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h2 className="text-lg font-medium mb-4 flex items-center">
+              <div id="language" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-medium mb-4 flex items-center dark:text-white">
                   <Globe className="h-5 w-5 mr-2 text-blue-500" />
-                  Idioma
+                  {t('settings.language')}
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-medium mb-2">Selecione o idioma</h3>
+                    <h3 className="font-medium mb-2 dark:text-white">{t('settings.select.language')}</h3>
                     <select 
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                       value={language}
                       onChange={handleLanguageChange}
                     >
-                      <option value="pt-BR">Português (Brasil)</option>
-                      <option value="en-US">English (United States)</option>
-                      <option value="es">Español</option>
-                      <option value="fr">Français</option>
+                      <option value="pt-BR">{t('language.pt-BR')}</option>
+                      <option value="en-US">{t('language.en-US')}</option>
+                      <option value="es">{t('language.es')}</option>
+                      <option value="fr">{t('language.fr')}</option>
                     </select>
                   </div>
                 </div>
               </div>
               
               {/* Privacidade */}
-              <div id="privacy" className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h2 className="text-lg font-medium mb-4 flex items-center">
+              <div id="privacy" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-medium mb-4 flex items-center dark:text-white">
                   <Shield className="h-5 w-5 mr-2 text-blue-500" />
-                  Privacidade
+                  {t('settings.privacy')}
                 </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Compartilhar dados</h3>
-                      <p className="text-sm text-gray-500">Compartilhar dados com parceiros</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.share.data')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.share.data.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -318,7 +325,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="share-data"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${privacy.shareData ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${privacy.shareData ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${privacy.shareData ? 'transform translate-x-6' : ''}`} 
@@ -329,8 +336,8 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Compartilhar estatísticas</h3>
-                      <p className="text-sm text-gray-500">Compartilhar estatísticas anônimas para melhorar o sistema</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.share.analytics')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.share.analytics.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -342,7 +349,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="share-analytics"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${privacy.shareAnalytics ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${privacy.shareAnalytics ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${privacy.shareAnalytics ? 'transform translate-x-6' : ''}`} 
@@ -354,16 +361,16 @@ const Settings = () => {
               </div>
               
               {/* Permissões */}
-              <div id="permissions" className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h2 className="text-lg font-medium mb-4 flex items-center">
+              <div id="permissions" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-medium mb-4 flex items-center dark:text-white">
                   <Users className="h-5 w-5 mr-2 text-blue-500" />
-                  Permissões
+                  {t('settings.permissions')}
                 </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Editar documentos</h3>
-                      <p className="text-sm text-gray-500">Permissão para editar documentos</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.edit.documents')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.edit.documents.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -375,7 +382,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="edit-documents"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${permissions.editDocuments ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${permissions.editDocuments ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${permissions.editDocuments ? 'transform translate-x-6' : ''}`} 
@@ -386,8 +393,8 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Excluir documentos</h3>
-                      <p className="text-sm text-gray-500">Permissão para excluir documentos</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.delete.documents')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.delete.documents.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -399,7 +406,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="delete-documents"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${permissions.deleteDocuments ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${permissions.deleteDocuments ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${permissions.deleteDocuments ? 'transform translate-x-6' : ''}`} 
@@ -410,8 +417,8 @@ const Settings = () => {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Gerenciar usuários</h3>
-                      <p className="text-sm text-gray-500">Permissão para gerenciar usuários</p>
+                      <h3 className="font-medium dark:text-white">{t('settings.manage.users')}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('settings.manage.users.desc')}</p>
                     </div>
                     <div className="relative">
                       <input 
@@ -423,7 +430,7 @@ const Settings = () => {
                       />
                       <label 
                         htmlFor="manage-users"
-                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${permissions.manageUsers ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        className={`block w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${permissions.manageUsers ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                       >
                         <span 
                           className={`block w-5 h-5 mt-0.5 ml-0.5 rounded-full transition-transform duration-200 ease-in-out bg-white shadow-sm ${permissions.manageUsers ? 'transform translate-x-6' : ''}`} 
@@ -440,7 +447,7 @@ const Settings = () => {
                   variant="primary"
                   onClick={handleSaveSettings}
                 >
-                  Salvar Configurações
+                  {t('settings.save')}
                 </Button>
               </div>
             </div>

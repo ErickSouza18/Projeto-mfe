@@ -108,5 +108,40 @@
 
 /* Fix for input style in dark mode */
 .dark input, .dark select, .dark textarea {
-  @apply bg-gray-700 border-gray-600 text-gray-100;
+  @apply bg-gray-800 border-gray-700 text-gray-100;
+}
+
+/* Form controls in dark mode */
+.dark select option {
+  @apply bg-gray-800 text-gray-100;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  @apply text-gray-400;
+}
+
+/* Improve button visibility in dark mode */
+.dark .bg-blue-500 {
+  @apply bg-blue-600;
+}
+
+.dark .hover\:bg-blue-600:hover {
+  @apply hover:bg-blue-700;
+}
+
+/* Improved focus states for dark mode */
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  @apply border-blue-500 ring-blue-500/30;
+}
+
+/* Improved contrast for toggle switches in dark mode */
+.dark .bg-gray-200 {
+  @apply bg-gray-600;
+}
+
+.dark .bg-gray-300 {
+  @apply bg-gray-700;
 }
