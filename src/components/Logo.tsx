@@ -11,11 +11,11 @@ const Logo = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg', clas
   return (
     <div className={`relative ${sizeClasses[size]} ${className}`}>
       <div className="absolute inset-0 logo-animation">
-        <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg"></div>
-        <div className="absolute left-0.5 top-0.5 w-[95%] h-[95%] bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg transform"></div>
+        <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg"></div>
+        <div className="absolute left-0.5 top-0.5 w-[95%] h-[95%] bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg transform"></div>
       </div>
       <div className="absolute inset-0 flex items-center justify-center font-bold text-white text-center">
-        <span className="text-xl">MEF</span>
+        <span className="text-xl">MFA</span>
       </div>
     </div>
   );
