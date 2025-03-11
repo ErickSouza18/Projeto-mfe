@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Search, PlusCircle, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
@@ -35,25 +34,57 @@ const findCompanyIdByName = (companies: any[], name: string) => {
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
   const [mockData, setMockData] = useState(() => {
-    // Add companyId to recentFiles if not present
-    const data = {...INITIAL_MOCK_DATA};
-    data.recentFiles = data.recentFiles.map(file => {
-      if (!file.companyId) {
-        return {
-          ...file,
-          companyId: findCompanyIdByName(data.companies, file.recipient)
-        };
-      }
-      return file;
-    });
-    return data;
+    // Load recent files from localStorage
+    const savedRecentFiles = localStorage.getItem('recentFiles');
+    const recentFiles = savedRecentFiles ? JSON.parse(savedRecentFiles) : INITIAL_MOCK_DATA.recentFiles;
+    
+    return {
+      ...INITIAL_MOCK_DATA,
+      recentFiles
+    };
   });
+  
+  // Save recent files to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('recentFiles', JSON.stringify(mockData.recentFiles));
+  }, [mockData.recentFiles]);
+  
+  // Add new method to handle file updates
+  const updateRecentFiles = (file: any) => {
+    setMockData(prev => {
+      // Check if file already exists
+      const existingFileIndex = prev.recentFiles.findIndex(f => f.name === file.name && f.companyId === file.companyId);
+      const newRecentFiles = [...prev.recentFiles];
+      
+      if (existingFileIndex >= 0) {
+        // Update existing file
+        newRecentFiles[existingFileIndex] = { ...file, date: new Date().toLocaleDateString('pt-BR') };
+      } else {
+        // Add new file at the beginning
+        newRecentFiles.unshift({
+          id: prev.recentFiles.length + 1,
+          name: file.name,
+          recipient: prev.companies.find(c => c.id === file.companyId)?.name || 'Unknown',
+          size: file.size || '1.0 MB',
+          date: new Date().toLocaleDateString('pt-BR'),
+          companyId: file.companyId
+        });
+        
+        // Keep only the 10 most recent files
+        if (newRecentFiles.length > 10) {
+          newRecentFiles.pop();
+        }
+      }
+      
+      return { ...prev, recentFiles: newRecentFiles };
+    });
+  };
   const [currentPage, setCurrentPage] = useState(1);
   const [fileSearchQuery, setFileSearchQuery] = useState('');
   const itemsPerPage = 6;
   const navigate = useNavigate();
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Initialize dark mode on mount
   useEffect(() => {
@@ -97,31 +128,12 @@ const Dashboard = () => {
     file.recipient.toLowerCase().includes(fileSearchQuery.toLowerCase())
   );
 
+  // Update handleFileClick to use the new updateRecentFiles method
   const handleFileClick = (fileId: number) => {
     const file = mockData.recentFiles.find(f => f.id === fileId);
     if (file) {
-      // Save file to company's files in localStorage
-      const companyId = file.companyId;
-      const companyFiles = JSON.parse(localStorage.getItem(`company_${companyId}_files`) || '[]');
-      
-      // Check if file already exists in company files
-      const existingFileIndex = companyFiles.findIndex((f: any) => f.name === file.name);
-      
-      if (existingFileIndex === -1) {
-        // Add file to company files if it doesn't exist
-        const newFile = {
-          id: companyFiles.length > 0 ? Math.max(...companyFiles.map((f: any) => f.id)) + 1 : 1,
-          name: file.name,
-          type: 'documentos', // Default type
-          date: file.date,
-          size: file.size
-        };
-        
-        localStorage.setItem(`company_${companyId}_files`, JSON.stringify([...companyFiles, newFile]));
-      }
-      
-      // Navigate to company detail page
-      navigate(`/company/${companyId}`);
+      updateRecentFiles(file);
+      navigate(`/company/${file.companyId}`);
       toast.info(`Visualizando arquivo: ${file.name}`);
     }
   };

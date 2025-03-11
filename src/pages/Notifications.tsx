@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle, AlertCircle, Info, MessageCircle, Calendar, X } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
@@ -57,7 +56,17 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  // Load notifications from localStorage or use mock data
+  const [notifications, setNotifications] = useState(() => {
+    const savedNotifications = localStorage.getItem('notifications');
+    return savedNotifications ? JSON.parse(savedNotifications) : MOCK_NOTIFICATIONS;
+  });
+  
+  // Save notifications to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+  }, [notifications]);
+  
   const [filter, setFilter] = useState('all');
 
   const getIconByType = (type: string) => {
@@ -78,18 +87,32 @@ const Notifications = () => {
     return notification.type === filter;
   });
 
+  // Update markAsRead to include animation
   const markAsRead = (id: number) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
+    const notificationElement = document.querySelector(`[data-notification-id="${id}"]`);
+    if (notificationElement) {
+      notificationElement.classList.add('animate-fade-out');
+      setTimeout(() => {
+        setNotifications(notifications.map(notification => 
+          notification.id === id ? { ...notification, read: true } : notification
+        ));
+      }, 300);
+    }
+  };
+  
+  // Update deleteNotification to include animation
+  const deleteNotification = (id: number) => {
+    const notificationElement = document.querySelector(`[data-notification-id="${id}"]`);
+    if (notificationElement) {
+      notificationElement.classList.add('animate-fade-out');
+      setTimeout(() => {
+        setNotifications(notifications.filter(notification => notification.id !== id));
+      }, 300);
+    }
   };
 
   const markAllAsRead = () => {
     setNotifications(notifications.map(notification => ({ ...notification, read: true })));
-  };
-
-  const deleteNotification = (id: number) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -198,8 +221,11 @@ const Notifications = () => {
             ) : (
               filteredNotifications.map(notification => (
                 <div 
-                  key={notification.id} 
-                  className={`bg-white rounded-lg shadow-sm border ${notification.read ? 'border-gray-100' : 'border-blue-300'} p-4 flex items-start transition-all hover:shadow-md`}
+                  key={notification.id}
+                  data-notification-id={notification.id}
+                  className={`bg-white rounded-lg shadow-sm border ${
+                    notification.read ? 'border-gray-100' : 'border-blue-300'
+                  } p-4 flex items-start transition-all hover:shadow-md animate-fade-in`}
                 >
                   <div className="p-2 rounded-full bg-gray-50 mr-4">
                     {getIconByType(notification.type)}

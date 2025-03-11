@@ -9,12 +9,10 @@ const Logo = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg', clas
   };
 
   return (
-    <div className={`relative ${sizeClasses[size]} ${className}`}>
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-blue-600 rounded-full" />
-      </div>
+    <div className={`relative ${sizeClasses[size]} ${className} logo-animation`}>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600 rounded-full shadow-lg transform transition-transform hover:scale-105 duration-300" />
       <div className="absolute inset-0 flex items-center justify-center text-white font-bold">
-        <span className={size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-lg'}>EGE</span>
+        <span className={size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-lg'}>MEF</span>
       </div>
     </div>
   );

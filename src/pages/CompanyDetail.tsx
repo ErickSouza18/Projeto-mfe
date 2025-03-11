@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, PlusCircle, Edit, Save, X, FileText, Eye, Download, Pencil } from 'lucide-react';
@@ -6,7 +5,6 @@ import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
 import { toast } from 'sonner';
 
-// Mock data
 const DOCUMENT_TYPES = [
   { id: 'contratos', label: 'CONTRATOS SOCIAIS E DOCUMENTOS SOCIETÁRIOS', color: 'green' },
   { id: 'documentos', label: 'DOCUMENTOS PESSOAIS', color: 'blue' },
@@ -37,7 +35,6 @@ const CompanyDetail = () => {
   const [currentFile, setCurrentFile] = useState<any>(null);
   const [isEditingFileName, setIsEditingFileName] = useState(false);
   
-  // Load files from localStorage if they exist
   useEffect(() => {
     const savedFiles = localStorage.getItem(`company_${id}_files`);
     if (savedFiles) {
@@ -45,12 +42,10 @@ const CompanyDetail = () => {
     }
   }, [id]);
   
-  // Save files to localStorage when they change
   useEffect(() => {
     localStorage.setItem(`company_${id}_files`, JSON.stringify(uploadedFiles));
   }, [uploadedFiles, id]);
   
-  // In a real app, you would fetch company data based on the ID
   const companyName = `Empresa ${id}`;
   
   const handleGoBack = () => {
@@ -87,7 +82,6 @@ const CompanyDetail = () => {
       return;
     }
     
-    // Add file extension if not provided
     let fileName = newFileName;
     if (!fileName.includes('.')) {
       fileName += '.pdf';
@@ -101,7 +95,18 @@ const CompanyDetail = () => {
       size: (Math.random() * 5).toFixed(1) + ' MB'
     };
     
-    setUploadedFiles([...uploadedFiles, newFile]);
+    setUploadedFiles(prev => [...prev, newFile]);
+    
+    const dashboardFile = {
+      ...newFile,
+      companyId: Number(id),
+      recipient: `Empresa ${id}`
+    };
+    const recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
+    recentFiles.unshift(dashboardFile);
+    if (recentFiles.length > 10) recentFiles.pop();
+    localStorage.setItem('recentFiles', JSON.stringify(recentFiles));
+    
     setShowNewFileModal(false);
     setNewFileName('');
     setNewFileType('');
@@ -109,9 +114,15 @@ const CompanyDetail = () => {
   };
   
   const handleDeleteFile = (fileId: number) => {
-    const fileToDelete = uploadedFiles.find(f => f.id === fileId);
-    setUploadedFiles(uploadedFiles.filter(f => f.id !== fileId));
-    toast.success(`Arquivo "${fileToDelete?.name}" removido com sucesso!`);
+    const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
+    if (fileElement) {
+      fileElement.classList.add('animate-fade-out');
+      setTimeout(() => {
+        const fileToDelete = uploadedFiles.find(f => f.id === fileId);
+        setUploadedFiles(uploadedFiles.filter(f => f.id !== fileId));
+        toast.success(`Arquivo "${fileToDelete?.name}" removido com sucesso!`);
+      }, 300);
+    }
   };
   
   const toggleEditMode = () => {
@@ -129,7 +140,6 @@ const CompanyDetail = () => {
   };
   
   const handleDownloadFile = (file: any) => {
-    // In a real app, this would trigger the actual file download
     toast.success(`Arquivo "${file.name}" baixado com sucesso!`);
   };
   
@@ -153,7 +163,6 @@ const CompanyDetail = () => {
       <Sidebar />
       
       <div className="flex-1 ml-80">
-        {/* Header */}
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4 px-6 flex items-center justify-between animate-fade-in">
           <div className="flex items-center">
             <button 
@@ -185,12 +194,10 @@ const CompanyDetail = () => {
           </Button>
         </header>
         
-        {/* Main content */}
         <main className="py-6 px-6 dark:text-gray-100">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6 fade-in animate-slide-in">
             <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Envio de Arquivos</h2>
             
-            {/* Document type selector */}
             <div className="relative mb-6">
               <div 
                 className="flex items-center border border-gray-200 dark:border-gray-600 rounded-lg p-3 cursor-pointer"
@@ -232,7 +239,6 @@ const CompanyDetail = () => {
               )}
             </div>
             
-            {/* Upload area */}
             <div className="border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 flex flex-col items-center justify-center">
               <Button
                 variant="primary"
@@ -253,7 +259,6 @@ const CompanyDetail = () => {
             </div>
           </div>
           
-          {/* Files table */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 fade-in animate-slide-in" style={{ animationDelay: '0.1s' }}>
             <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Arquivos Enviados</h2>
             
@@ -277,7 +282,11 @@ const CompanyDetail = () => {
                     </tr>
                   ) : (
                     uploadedFiles.map(file => (
-                      <tr key={file.id} className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover-scale">
+                      <tr 
+                        key={file.id}
+                        data-file-id={file.id}
+                        className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 animate-fade-in"
+                      >
                         <td className="py-3 px-4 dark:text-gray-300">
                           <div className="flex items-center gap-2">
                             <FileText size={16} className="text-blue-500" />
@@ -337,7 +346,6 @@ const CompanyDetail = () => {
         </main>
       </div>
       
-      {/* New File Modal */}
       {showNewFileModal && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative animate-scale-in">
@@ -402,7 +410,6 @@ const CompanyDetail = () => {
         </div>
       )}
       
-      {/* File Preview Modal */}
       {showFilePreviewModal && currentFile && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl p-6 relative animate-scale-in">
