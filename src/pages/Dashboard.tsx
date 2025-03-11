@@ -21,22 +21,11 @@ const INITIAL_MOCK_DATA = {
     { id: 6, name: 'Cliente 3', employeeCount: 0, lastUpdate: '13/09/2024', type: 'client' },
   ],
   recentFiles: [
-    { id: 1, name: 'Relatório Mensal.pdf', recipient: 'Empresa 1', size: '1.2 MB', date: '13/09/2024', companyId: 1, deleted: false, type: 'contratos' },
-    { id: 2, name: 'Contratos 2024.docx', recipient: 'Cliente 2', size: '0.8 MB', date: '12/09/2024', companyId: 4, deleted: false, type: 'alvaras' },
-    { id: 3, name: 'Análise Financeira.xlsx', recipient: 'Empresa 3', size: '2.5 MB', date: '10/09/2024', companyId: 5, deleted: false, type: 'honorarios' },
-    { id: 4, name: 'Proposta Comercial.pdf', recipient: 'Cliente 1', size: '3.1 MB', date: '08/09/2024', companyId: 2, deleted: false, type: 'documentos' },
+    { id: 1, name: 'Relatório Mensal.pdf', recipient: 'Empresa 1', size: '1.2 MB', date: '13/09/2024', companyId: 1, deleted: false },
+    { id: 2, name: 'Contratos 2024.docx', recipient: 'Cliente 2', size: '0.8 MB', date: '12/09/2024', companyId: 4, deleted: false },
+    { id: 3, name: 'Análise Financeira.xlsx', recipient: 'Empresa 3', size: '2.5 MB', date: '10/09/2024', companyId: 5, deleted: false },
+    { id: 4, name: 'Proposta Comercial.pdf', recipient: 'Cliente 1', size: '3.1 MB', date: '08/09/2024', companyId: 2, deleted: false },
   ]
-};
-
-// Document types with their colors
-const DOCUMENT_TYPES_COLORS = {
-  'contratos': 'green',
-  'documentos': 'blue',
-  'alvaras': 'yellow',
-  'certificados': 'red',
-  'folhapagamento': 'orange',
-  'honorarios': 'cyan',
-  'contratos_servicos': 'purple'
 };
 
 // Helper function to find company ID from name
@@ -49,22 +38,6 @@ const findCompanyIdByName = (companies: any[], name: string) => {
 const formatDate = () => {
   const date = new Date();
   return date.toLocaleDateString('pt-BR');
-};
-
-// Function to get color class for document type
-const getColorClass = (type: string) => {
-  const color = DOCUMENT_TYPES_COLORS[type as keyof typeof DOCUMENT_TYPES_COLORS] || 'gray';
-  
-  switch(color) {
-    case 'green': return 'bg-green-500';
-    case 'blue': return 'bg-blue-500';
-    case 'yellow': return 'bg-yellow-500';
-    case 'red': return 'bg-red-500';
-    case 'orange': return 'bg-orange-500';
-    case 'cyan': return 'bg-cyan-500';
-    case 'purple': return 'bg-purple-500';
-    default: return 'bg-gray-500';
-  }
 };
 
 const Dashboard = () => {
@@ -116,8 +89,7 @@ const Dashboard = () => {
           size: file.size || '1.0 MB',
           date: formatDate(),
           companyId: file.companyId,
-          deleted: false,
-          type: file.type || 'documentos'
+          deleted: false
         });
         
         // Keep only the 10 most recent files
@@ -234,7 +206,6 @@ const Dashboard = () => {
     email: string;
     phone: string;
     responsibleName: string;
-    employeeCount: number;
   }) => {
     const newId = mockData.companies.length > 0 
       ? Math.max(...mockData.companies.map(c => c.id)) + 1 
@@ -243,7 +214,7 @@ const Dashboard = () => {
     const companyToAdd = {
       id: newId,
       name: newCompany.name,
-      employeeCount: newCompany.employeeCount,
+      employeeCount: 0,
       lastUpdate: formatDate(),
       type: 'company' as 'company' | 'client'
     };
@@ -252,20 +223,6 @@ const Dashboard = () => {
       ...prev,
       companies: [...prev.companies, companyToAdd]
     }));
-    
-    // Save company info to localStorage
-    const companyInfo = {
-      name: newCompany.name,
-      location: 'São Paulo, SP',
-      identifier: newCompany.cnpj,
-      identifierType: 'CNPJ',
-      ownerName: newCompany.responsibleName,
-      ownerEmail: newCompany.email,
-      ownerPhone: newCompany.phone,
-      employeeCount: newCompany.employeeCount
-    };
-    
-    localStorage.setItem(`company_${newId}_info`, JSON.stringify(companyInfo));
     
     setShowAddModal(false);
     toast.success(`${t('dashboard.company.added')}: "${newCompany.name}"`);
@@ -284,28 +241,8 @@ const Dashboard = () => {
     
     window.addEventListener('fileDeleted' as any, handleFileDeleted);
     
-    // Listen for company updates from CompanyInfoModal
-    const handleCompanyUpdated = (event: CustomEvent) => {
-      const { companyId } = event.detail;
-      
-      // Refresh the companies list
-      const savedCompanies = localStorage.getItem('companies');
-      const companies = savedCompanies ? JSON.parse(savedCompanies) : [];
-      
-      const savedRecentFiles = localStorage.getItem('recentFiles');
-      const recentFiles = savedRecentFiles ? JSON.parse(savedRecentFiles) : [];
-      
-      setMockData({
-        companies,
-        recentFiles
-      });
-    };
-    
-    window.addEventListener('companyUpdated' as any, handleCompanyUpdated);
-    
     return () => {
       window.removeEventListener('fileDeleted' as any, handleFileDeleted);
-      window.removeEventListener('companyUpdated' as any, handleCompanyUpdated);
     };
   }, []);
 
@@ -455,7 +392,6 @@ const Dashboard = () => {
                       >
                         <td className="py-3 px-4 dark:text-gray-300">
                           <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${getColorClass(file.type || 'documentos')}`}></div>
                             <FileText size={16} className={file.deleted ? "text-gray-400" : "text-blue-500"} />
                             <span className={file.deleted ? "text-gray-400 line-through" : ""}>
                               {file.name}
