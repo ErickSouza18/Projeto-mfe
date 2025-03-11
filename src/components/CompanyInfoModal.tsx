@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
-import { Building, MapPin, Calculator, User, Mail, Phone, X, Save, Edit, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Building, MapPin, Calculator, User, Mail, Phone, X, Save, Edit } from 'lucide-react';
 import Button from './Button';
 import { useLanguage } from '../context/LanguageContext';
+import { toast } from 'sonner';
 
 interface CompanyInfo {
   name: string;
@@ -12,6 +13,7 @@ interface CompanyInfo {
   ownerName: string;
   ownerEmail: string;
   ownerPhone: string;
+  employeeCount: number;
 }
 
 interface CompanyInfoModalProps {
@@ -28,15 +30,20 @@ const CompanyInfoModal: React.FC<CompanyInfoModalProps> = ({
   
   // Load company info from localStorage or use defaults
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(() => {
+    // Load companies from localStorage
+    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+    const company = companies.find((c: any) => c.id === Number(companyId));
+    
     const savedInfo = localStorage.getItem(`company_${companyId}_info`);
     return savedInfo ? JSON.parse(savedInfo) : {
-      name: `Empresa ${companyId}`,
+      name: company?.name || `Empresa ${companyId}`,
       location: 'São Paulo, SP',
       identifier: '12.345.678/0001-90',
       identifierType: 'CNPJ',
       ownerName: 'João Silva',
       ownerEmail: 'joao.silva@empresa.com',
-      ownerPhone: '(11) 98765-4321'
+      ownerPhone: '(11) 98765-4321',
+      employeeCount: company?.employeeCount || 0
     };
   });
   
@@ -46,8 +53,46 @@ const CompanyInfoModal: React.FC<CompanyInfoModalProps> = ({
   const handleSave = () => {
     // Save to localStorage
     localStorage.setItem(`company_${companyId}_info`, JSON.stringify(editInfo));
+    
+    // Update company name and employee count in the companies list
+    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+    const updatedCompanies = companies.map((company: any) => {
+      if (company.id === Number(companyId)) {
+        return {
+          ...company,
+          name: editInfo.name,
+          employeeCount: editInfo.employeeCount,
+          lastUpdate: new Date().toLocaleDateString('pt-BR')
+        };
+      }
+      return company;
+    });
+    
+    localStorage.setItem('companies', JSON.stringify(updatedCompanies));
+    
+    // Update company name in recent files
+    const recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
+    const updatedRecentFiles = recentFiles.map((file: any) => {
+      if (file.companyId === Number(companyId)) {
+        return {
+          ...file,
+          recipient: editInfo.name
+        };
+      }
+      return file;
+    });
+    
+    localStorage.setItem('recentFiles', JSON.stringify(updatedRecentFiles));
+    
     setCompanyInfo(editInfo);
     setIsEditing(false);
+    
+    toast.success(t('company.info.saved'));
+    
+    // Dispatch event to notify other components of the name change
+    window.dispatchEvent(new CustomEvent('companyUpdated', { 
+      detail: { companyId: Number(companyId) } 
+    }));
   };
   
   const handleCancel = () => {
@@ -56,10 +101,19 @@ const CompanyInfoModal: React.FC<CompanyInfoModalProps> = ({
   };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditInfo({
-      ...editInfo,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    
+    if (name === 'employeeCount') {
+      setEditInfo({
+        ...editInfo,
+        [name]: parseInt(value) || 0
+      });
+    } else {
+      setEditInfo({
+        ...editInfo,
+        [name]: value
+      });
+    }
   };
   
   const handleIdentifierTypeChange = (type: 'CNPJ' | 'MEI') => {
@@ -146,6 +200,28 @@ const CompanyInfoModal: React.FC<CompanyInfoModalProps> = ({
                     />
                   ) : (
                     <p className="text-gray-800 dark:text-gray-200">{companyInfo.location}</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Employee Count */}
+              <div className="flex items-start">
+                <User className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                <div className="flex-1">
+                  <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    {t('company.info.employeeCount')}
+                  </h5>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      name="employeeCount"
+                      value={editInfo.employeeCount}
+                      onChange={handleChange}
+                      min="0"
+                      className="mt-1 w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                  ) : (
+                    <p className="text-gray-800 dark:text-gray-200">{companyInfo.employeeCount}</p>
                   )}
                 </div>
               </div>

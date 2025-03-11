@@ -1,3 +1,7 @@
+
+// We need to make significant changes to the CompanyDetail page to ensure files are saved properly 
+// and to add color indicators for document types.
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -44,19 +48,48 @@ const CompanyDetail = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<any>(null);
   const [showCompanyInfoModal, setShowCompanyInfoModal] = useState(false);
+  const [companyName, setCompanyName] = useState(`${t('company.label')} ${id}`);
   
+  // Load company info and files when component mounts
   useEffect(() => {
+    // Load company info
+    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+    const company = companies.find((c: any) => c.id === Number(id));
+    if (company) {
+      setCompanyName(company.name);
+    }
+    
+    // Load files
     const savedFiles = localStorage.getItem(`company_${id}_files`);
     if (savedFiles) {
       setUploadedFiles(JSON.parse(savedFiles));
     }
-  }, [id]);
+  }, [id, t]);
   
+  // Save files to localStorage when they change
   useEffect(() => {
     localStorage.setItem(`company_${id}_files`, JSON.stringify(uploadedFiles));
   }, [uploadedFiles, id]);
   
-  const companyName = `${t('company.label')} ${id}`;
+  // Listen for company updates
+  useEffect(() => {
+    const handleCompanyUpdated = (event: CustomEvent) => {
+      if (event.detail.companyId === Number(id)) {
+        // Refresh company name
+        const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+        const company = companies.find((c: any) => c.id === Number(id));
+        if (company) {
+          setCompanyName(company.name);
+        }
+      }
+    };
+    
+    window.addEventListener('companyUpdated' as any, handleCompanyUpdated);
+    
+    return () => {
+      window.removeEventListener('companyUpdated' as any, handleCompanyUpdated);
+    };
+  }, [id]);
   
   const handleGoBack = () => {
     navigate('/dashboard');
@@ -97,16 +130,20 @@ const CompanyDetail = () => {
       fileName += '.pdf';
     }
     
+    const fileType = newFileType || selectedDocType;
+    
     const newFile = {
       id: uploadedFiles.length > 0 ? Math.max(...uploadedFiles.map(f => f.id)) + 1 : 1,
       name: fileName,
-      type: newFileType || selectedDocType,
+      type: fileType,
       date: new Date().toLocaleDateString('pt-BR'),
       size: (Math.random() * 5).toFixed(1) + ' MB'
     };
     
+    // Add to company's files
     setUploadedFiles(prev => [...prev, newFile]);
     
+    // Update company's last update date
     const companies = JSON.parse(localStorage.getItem('companies') || '[]');
     const updatedCompanies = companies.map((company: any) => {
       if (company.id === Number(id)) {
@@ -116,14 +153,16 @@ const CompanyDetail = () => {
     });
     localStorage.setItem('companies', JSON.stringify(updatedCompanies));
     
+    // Add to recent files
     const dashboardFile = {
       id: Math.random() * 10000 | 0,
       name: fileName,
-      recipient: `${t('company.label')} ${id}`,
+      recipient: companyName,
       size: (Math.random() * 5).toFixed(1) + ' MB',
       date: new Date().toLocaleDateString('pt-BR'),
       companyId: Number(id),
-      deleted: false
+      deleted: false,
+      type: fileType
     };
     
     const recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
@@ -131,6 +170,7 @@ const CompanyDetail = () => {
     if (recentFiles.length > 10) recentFiles.pop();
     localStorage.setItem('recentFiles', JSON.stringify(recentFiles));
     
+    // Close modal and reset form
     setShowNewFileModal(false);
     setNewFileName('');
     setNewFileType('');
@@ -152,8 +192,10 @@ const CompanyDetail = () => {
     if (fileElement) {
       fileElement.classList.add('animate-fade-out');
       setTimeout(() => {
+        // Remove from company's files
         setUploadedFiles(uploadedFiles.filter(f => f.id !== fileToDelete.id));
         
+        // Update company's last update date
         const companies = JSON.parse(localStorage.getItem('companies') || '[]');
         const updatedCompanies = companies.map((company: any) => {
           if (company.id === Number(id)) {
@@ -163,6 +205,7 @@ const CompanyDetail = () => {
         });
         localStorage.setItem('companies', JSON.stringify(updatedCompanies));
         
+        // Mark as deleted in recent files
         const recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
         const updatedRecentFiles = recentFiles.map((file: any) => {
           if (file.name === fileToDelete.name && file.companyId === Number(id)) {
@@ -171,6 +214,7 @@ const CompanyDetail = () => {
           return file;
         });
         
+        // Move deleted file to top of recent files
         const deletedIndex = updatedRecentFiles.findIndex((file: any) => 
           file.name === fileToDelete.name && file.companyId === Number(id)
         );
@@ -182,6 +226,7 @@ const CompanyDetail = () => {
         
         localStorage.setItem('recentFiles', JSON.stringify(updatedRecentFiles));
         
+        // Dispatch file deleted event
         window.dispatchEvent(new CustomEvent('fileDeleted', { 
           detail: { fileId: fileToDelete.id } 
         }));
@@ -373,6 +418,7 @@ const CompanyDetail = () => {
                       >
                         <td className="py-3 px-4 dark:text-gray-300">
                           <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${getColorClass(getColorForType(file.type))}`}></div>
                             <FileText size={16} className="text-blue-500" />
                             {file.name}
                           </div>
@@ -508,6 +554,7 @@ const CompanyDetail = () => {
             </button>
             
             <h3 className="text-lg font-medium mb-4 dark:text-white flex items-center gap-3">
+              <div className={`w-4 h-4 rounded-full ${getColorClass(getColorForType(currentFile.type))}`}></div>
               <FileText size={20} className="text-blue-500" />
               {isEditingFileName ? (
                 <input 

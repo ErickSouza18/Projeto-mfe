@@ -22,8 +22,8 @@ const DeleteFileModal: React.FC<DeleteFileModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Admin password validation (simplified for demo purposes)
-    if (password === 'admin123') {
+    // Default admin password = 1234 (now simplified for demo purposes)
+    if (password === '1234') {
       onConfirm();
     } else {
       setError(t('modal.delete.wrongPassword'));
@@ -80,6 +80,9 @@ const DeleteFileModal: React.FC<DeleteFileModalProps> = ({
               placeholder="••••••••"
             />
             {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {t('modal.delete.defaultPassword')}
+            </p>
           </div>
           
           <div className="flex justify-end gap-3">
