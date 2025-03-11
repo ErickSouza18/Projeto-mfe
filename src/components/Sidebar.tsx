@@ -1,9 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Bell, User, LogOut, Settings } from 'lucide-react';
 import Logo from './Logo';
 import { toast } from 'sonner';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SidebarProps {
   email?: string;
@@ -16,13 +17,14 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
   const handleLogout = () => {
-    toast.success('Logout realizado com sucesso');
+    toast.success(t('sidebar.logout.success'));
     navigate('/login');
   };
 
@@ -58,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           }`}
         >
           <Home size={20} />
-          <span>Início</span>
+          <span>{t('sidebar.home')}</span>
         </Link>
         
         <Link 
@@ -70,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           }`}
         >
           <Bell size={20} />
-          <span>Notificações</span>
+          <span>{t('sidebar.notifications')}</span>
         </Link>
         
         <Link 
@@ -82,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           }`}
         >
           <User size={20} />
-          <span>Perfil</span>
+          <span>{t('sidebar.profile')}</span>
         </Link>
         
         <Link 
@@ -94,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           }`}
         >
           <Settings size={20} />
-          <span>Configurações</span>
+          <span>{t('sidebar.settings')}</span>
         </Link>
       </nav>
     </div>

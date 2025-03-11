@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, PlusCircle, Edit, Save, X, FileText, Eye, Download, Pencil } from 'lucide-react';
+import { 
+  ArrowLeft, Upload, PlusCircle, Edit, Save, X, FileText, 
+  Eye, Download, Pencil, Info, Building 
+} from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
 import { toast } from 'sonner';
+import DeleteFileModal from '../components/DeleteFileModal';
+import CompanyInfoModal from '../components/CompanyInfoModal';
+import { useLanguage } from '../context/LanguageContext';
 
 const DOCUMENT_TYPES = [
   { id: 'contratos', label: 'CONTRATOS SOCIAIS E DOCUMENTOS SOCIETÁRIOS', color: 'green' },
@@ -18,6 +24,7 @@ const DOCUMENT_TYPES = [
 const CompanyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [selectedDocType, setSelectedDocType] = useState(DOCUMENT_TYPES[0].id);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -34,6 +41,9 @@ const CompanyDetail = () => {
   const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
   const [currentFile, setCurrentFile] = useState<any>(null);
   const [isEditingFileName, setIsEditingFileName] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<any>(null);
+  const [showCompanyInfoModal, setShowCompanyInfoModal] = useState(false);
   
   useEffect(() => {
     const savedFiles = localStorage.getItem(`company_${id}_files`);
@@ -46,7 +56,7 @@ const CompanyDetail = () => {
     localStorage.setItem(`company_${id}_files`, JSON.stringify(uploadedFiles));
   }, [uploadedFiles, id]);
   
-  const companyName = `Empresa ${id}`;
+  const companyName = `${t('company.label')} ${id}`;
   
   const handleGoBack = () => {
     navigate('/dashboard');
@@ -78,7 +88,7 @@ const CompanyDetail = () => {
   
   const handleCreateNewFile = () => {
     if (!newFileName.trim()) {
-      toast.error('Por favor, insira um nome para o arquivo');
+      toast.error(t('file.error.noName'));
       return;
     }
     
@@ -97,11 +107,25 @@ const CompanyDetail = () => {
     
     setUploadedFiles(prev => [...prev, newFile]);
     
+    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+    const updatedCompanies = companies.map((company: any) => {
+      if (company.id === Number(id)) {
+        return { ...company, lastUpdate: new Date().toLocaleDateString('pt-BR') };
+      }
+      return company;
+    });
+    localStorage.setItem('companies', JSON.stringify(updatedCompanies));
+    
     const dashboardFile = {
-      ...newFile,
+      id: Math.random() * 10000 | 0,
+      name: fileName,
+      recipient: `${t('company.label')} ${id}`,
+      size: (Math.random() * 5).toFixed(1) + ' MB',
+      date: new Date().toLocaleDateString('pt-BR'),
       companyId: Number(id),
-      recipient: `Empresa ${id}`
+      deleted: false
     };
+    
     const recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
     recentFiles.unshift(dashboardFile);
     if (recentFiles.length > 10) recentFiles.pop();
@@ -110,17 +134,61 @@ const CompanyDetail = () => {
     setShowNewFileModal(false);
     setNewFileName('');
     setNewFileType('');
-    toast.success(`Arquivo "${newFile.name}" adicionado com sucesso!`);
+    toast.success(`${t('file.added')}: "${newFile.name}"`);
   };
   
   const handleDeleteFile = (fileId: number) => {
-    const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
+    const fileToDelete = uploadedFiles.find(f => f.id === fileId);
+    if (fileToDelete) {
+      setFileToDelete(fileToDelete);
+      setShowDeleteModal(true);
+    }
+  };
+  
+  const confirmDeleteFile = () => {
+    if (!fileToDelete) return;
+    
+    const fileElement = document.querySelector(`[data-file-id="${fileToDelete.id}"]`);
     if (fileElement) {
       fileElement.classList.add('animate-fade-out');
       setTimeout(() => {
-        const fileToDelete = uploadedFiles.find(f => f.id === fileId);
-        setUploadedFiles(uploadedFiles.filter(f => f.id !== fileId));
-        toast.success(`Arquivo "${fileToDelete?.name}" removido com sucesso!`);
+        setUploadedFiles(uploadedFiles.filter(f => f.id !== fileToDelete.id));
+        
+        const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+        const updatedCompanies = companies.map((company: any) => {
+          if (company.id === Number(id)) {
+            return { ...company, lastUpdate: new Date().toLocaleDateString('pt-BR') };
+          }
+          return company;
+        });
+        localStorage.setItem('companies', JSON.stringify(updatedCompanies));
+        
+        const recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
+        const updatedRecentFiles = recentFiles.map((file: any) => {
+          if (file.name === fileToDelete.name && file.companyId === Number(id)) {
+            return { ...file, deleted: true, date: new Date().toLocaleDateString('pt-BR') };
+          }
+          return file;
+        });
+        
+        const deletedIndex = updatedRecentFiles.findIndex((file: any) => 
+          file.name === fileToDelete.name && file.companyId === Number(id)
+        );
+        
+        if (deletedIndex > 0) {
+          const deletedFile = updatedRecentFiles.splice(deletedIndex, 1)[0];
+          updatedRecentFiles.unshift(deletedFile);
+        }
+        
+        localStorage.setItem('recentFiles', JSON.stringify(updatedRecentFiles));
+        
+        window.dispatchEvent(new CustomEvent('fileDeleted', { 
+          detail: { fileId: fileToDelete.id } 
+        }));
+        
+        toast.success(`${t('file.deleted')}: "${fileToDelete.name}"`);
+        setShowDeleteModal(false);
+        setFileToDelete(null);
       }, 300);
     }
   };
@@ -128,9 +196,9 @@ const CompanyDetail = () => {
   const toggleEditMode = () => {
     setIsEditing(!isEditing);
     if (isEditing) {
-      toast.success('Alterações salvas com sucesso!');
+      toast.success(t('company.changesSaved'));
     } else {
-      toast.info('Modo de edição ativado');
+      toast.info(t('company.editMode'));
     }
   };
   
@@ -140,7 +208,7 @@ const CompanyDetail = () => {
   };
   
   const handleDownloadFile = (file: any) => {
-    toast.success(`Arquivo "${file.name}" baixado com sucesso!`);
+    toast.success(`${t('file.downloaded')}: "${file.name}"`);
   };
   
   const handleUpdateFileName = () => {
@@ -155,7 +223,11 @@ const CompanyDetail = () => {
     
     setUploadedFiles(updatedFiles);
     setIsEditingFileName(false);
-    toast.success('Nome do arquivo atualizado com sucesso!');
+    toast.success(t('file.nameUpdated'));
+  };
+  
+  const handleViewCompanyInfo = () => {
+    setShowCompanyInfoModal(true);
   };
   
   return (
@@ -174,29 +246,41 @@ const CompanyDetail = () => {
             <h1 className="text-xl font-semibold dark:text-white">{companyName}</h1>
           </div>
           
-          <Button
-            variant={isEditing ? "danger" : "primary"}
-            size="sm"
-            onClick={toggleEditMode}
-            className="flex items-center gap-1 hover-scale"
-          >
-            {isEditing ? (
-              <>
-                <Save size={16} />
-                Salvar Alterações
-              </>
-            ) : (
-              <>
-                <Edit size={16} />
-                Editar Documentos
-              </>
-            )}
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleViewCompanyInfo}
+              className="flex items-center gap-1 hover-scale"
+            >
+              <Building size={16} />
+              {t('company.viewInfo')}
+            </Button>
+            
+            <Button
+              variant={isEditing ? "danger" : "primary"}
+              size="sm"
+              onClick={toggleEditMode}
+              className="flex items-center gap-1 hover-scale"
+            >
+              {isEditing ? (
+                <>
+                  <Save size={16} />
+                  {t('company.saveChanges')}
+                </>
+              ) : (
+                <>
+                  <Edit size={16} />
+                  {t('company.editDocuments')}
+                </>
+              )}
+            </Button>
+          </div>
         </header>
         
         <main className="py-6 px-6 dark:text-gray-100">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6 fade-in animate-slide-in">
-            <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Envio de Arquivos</h2>
+            <h2 className="text-lg font-medium mb-4 dark:text-gray-100">{t('file.upload.title')}</h2>
             
             <div className="relative mb-6">
               <div 
@@ -246,38 +330,38 @@ const CompanyDetail = () => {
                 onClick={handleAddFile}
               >
                 <PlusCircle size={18} />
-                Novo Arquivo
+                {t('file.new')}
               </Button>
               <Button
                 variant="secondary"
                 className="mb-4 flex items-center gap-2 hover-scale"
               >
                 <Upload size={18} />
-                Enviar Arquivos
+                {t('file.upload.button')}
               </Button>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Ou arraste e solte seus arquivos aqui</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('file.upload.dragDrop')}</p>
             </div>
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 fade-in animate-slide-in" style={{ animationDelay: '0.1s' }}>
-            <h2 className="text-lg font-medium mb-4 dark:text-gray-100">Arquivos Enviados</h2>
+            <h2 className="text-lg font-medium mb-4 dark:text-gray-100">{t('file.uploaded')}</h2>
             
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Nome do Arquivo</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Tipo</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Data de Envio</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Tamanho</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">Ações</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">{t('file.table.name')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">{t('file.table.type')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">{t('file.table.date')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">{t('file.table.size')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-300">{t('file.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {uploadedFiles.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-4 px-4 text-center text-gray-500 dark:text-gray-400">
-                        Nenhum arquivo enviado ainda
+                        {t('file.table.empty')}
                       </td>
                     </tr>
                   ) : (
@@ -302,14 +386,14 @@ const CompanyDetail = () => {
                           <button 
                             className="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
                             onClick={() => handleViewFile(file)}
-                            title="Visualizar arquivo"
+                            title={t('file.actions.view')}
                           >
                             <Eye size={16} />
                           </button>
                           <button 
                             className="text-green-500 hover:text-green-700 dark:hover:text-green-400 transition-colors"
                             onClick={() => handleDownloadFile(file)}
-                            title="Baixar arquivo"
+                            title={t('file.actions.download')}
                           >
                             <Download size={16} />
                           </button>
@@ -322,14 +406,14 @@ const CompanyDetail = () => {
                                   setIsEditingFileName(true);
                                   setShowFilePreviewModal(true);
                                 }}
-                                title="Editar arquivo"
+                                title={t('file.actions.edit')}
                               >
                                 <Pencil size={16} />
                               </button>
                               <button 
                                 className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
                                 onClick={() => handleDeleteFile(file.id)}
-                                title="Excluir arquivo"
+                                title={t('file.actions.delete')}
                               >
                                 <X size={16} />
                               </button>
@@ -356,25 +440,25 @@ const CompanyDetail = () => {
               <X size={20} />
             </button>
             
-            <h3 className="text-lg font-medium mb-4 dark:text-white">Novo Arquivo</h3>
+            <h3 className="text-lg font-medium mb-4 dark:text-white">{t('file.modal.new')}</h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Nome do Arquivo
+                  {t('file.modal.name')}
                 </label>
                 <input 
                   type="text"
                   className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   value={newFileName}
                   onChange={(e) => setNewFileName(e.target.value)}
-                  placeholder="Ex: Contrato Social"
+                  placeholder={t('file.modal.namePlaceholder')}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tipo de Documento
+                  {t('file.modal.type')}
                 </label>
                 <select
                   className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -395,14 +479,14 @@ const CompanyDetail = () => {
                   onClick={() => setShowNewFileModal(false)}
                   className="hover-scale"
                 >
-                  Cancelar
+                  {t('modal.cancel')}
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleCreateNewFile}
                   className="hover-scale"
                 >
-                  Criar Arquivo
+                  {t('file.modal.create')}
                 </Button>
               </div>
             </div>
@@ -449,9 +533,9 @@ const CompanyDetail = () => {
             <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-4 min-h-[300px] flex items-center justify-center">
               <div className="text-center">
                 <FileText size={64} className="mx-auto mb-4 text-blue-500" />
-                <p className="text-gray-600 dark:text-gray-300">Visualização de arquivo indisponível</p>
+                <p className="text-gray-600 dark:text-gray-300">{t('file.preview.unavailable')}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Tipo: {DOCUMENT_TYPES.find(t => t.id === currentFile.type)?.label}
+                  {t('file.preview.type')}: {DOCUMENT_TYPES.find(t => t.id === currentFile.type)?.label}
                 </p>
               </div>
             </div>
@@ -464,14 +548,14 @@ const CompanyDetail = () => {
                     onClick={() => setIsEditingFileName(false)}
                     className="hover-scale"
                   >
-                    Cancelar
+                    {t('modal.cancel')}
                   </Button>
                   <Button
                     variant="primary"
                     onClick={handleUpdateFileName}
                     className="hover-scale"
                   >
-                    Salvar Nome
+                    {t('file.modal.saveName')}
                   </Button>
                 </>
               )}
@@ -484,20 +568,38 @@ const CompanyDetail = () => {
                     className="flex items-center gap-2 hover-scale"
                   >
                     <Download size={16} />
-                    Baixar
+                    {t('file.actions.download')}
                   </Button>
                   <Button
                     variant="primary"
                     onClick={() => setShowFilePreviewModal(false)}
                     className="hover-scale"
                   >
-                    Fechar
+                    {t('modal.close')}
                   </Button>
                 </>
               )}
             </div>
           </div>
         </div>
+      )}
+      
+      {showDeleteModal && fileToDelete && (
+        <DeleteFileModal
+          fileName={fileToDelete.name}
+          onConfirm={confirmDeleteFile}
+          onCancel={() => {
+            setShowDeleteModal(false);
+            setFileToDelete(null);
+          }}
+        />
+      )}
+      
+      {showCompanyInfoModal && (
+        <CompanyInfoModal
+          companyId={id || '0'}
+          onClose={() => setShowCompanyInfoModal(false)}
+        />
       )}
     </div>
   );

@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle, AlertCircle, Info, MessageCircle, Calendar, X } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
+import { useLanguage } from '../context/LanguageContext';
 
 // Dados fictícios de notificações
 const MOCK_NOTIFICATIONS = [
@@ -56,6 +58,8 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 const Notifications = () => {
+  const { t } = useLanguage();
+  
   // Load notifications from localStorage or use mock data
   const [notifications, setNotifications] = useState(() => {
     const savedNotifications = localStorage.getItem('notifications');
@@ -126,7 +130,7 @@ const Notifications = () => {
         <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between">
           <div className="flex items-center">
             <Bell className="h-6 w-6 text-gray-700 mr-2" />
-            <h1 className="text-xl font-semibold">Notificações</h1>
+            <h1 className="text-xl font-semibold">{t('notifications.title')}</h1>
             {unreadCount > 0 && (
               <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                 {unreadCount}
@@ -140,7 +144,7 @@ const Notifications = () => {
             onClick={markAllAsRead}
             disabled={unreadCount === 0}
           >
-            Marcar todas como lidas
+            {t('notifications.markAllRead')}
           </Button>
         </header>
         
@@ -153,56 +157,56 @@ const Notifications = () => {
               size="sm"
               onClick={() => setFilter('all')}
             >
-              Todas
+              {t('notifications.filter.all')}
             </Button>
             <Button 
               variant={filter === 'unread' ? 'primary' : 'outline'} 
               size="sm"
               onClick={() => setFilter('unread')}
             >
-              Não lidas
+              {t('notifications.filter.unread')}
             </Button>
             <Button 
               variant={filter === 'info' ? 'primary' : 'outline'} 
               size="sm"
               onClick={() => setFilter('info')}
             >
-              Informações
+              {t('notifications.filter.info')}
             </Button>
             <Button 
               variant={filter === 'success' ? 'primary' : 'outline'} 
               size="sm"
               onClick={() => setFilter('success')}
             >
-              Sucesso
+              {t('notifications.filter.success')}
             </Button>
             <Button 
               variant={filter === 'warning' ? 'primary' : 'outline'} 
               size="sm"
               onClick={() => setFilter('warning')}
             >
-              Avisos
+              {t('notifications.filter.warning')}
             </Button>
             <Button 
               variant={filter === 'error' ? 'primary' : 'outline'} 
               size="sm"
               onClick={() => setFilter('error')}
             >
-              Erros
+              {t('notifications.filter.error')}
             </Button>
             <Button 
               variant={filter === 'message' ? 'primary' : 'outline'} 
               size="sm"
               onClick={() => setFilter('message')}
             >
-              Mensagens
+              {t('notifications.filter.message')}
             </Button>
             <Button 
               variant={filter === 'event' ? 'primary' : 'outline'} 
               size="sm"
               onClick={() => setFilter('event')}
             >
-              Eventos
+              {t('notifications.filter.event')}
             </Button>
           </div>
           
@@ -211,11 +215,11 @@ const Notifications = () => {
             {filteredNotifications.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 text-center">
                 <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-gray-700">Nenhuma notificação encontrada</h3>
+                <h3 className="text-lg font-medium text-gray-700">{t('notifications.empty.title')}</h3>
                 <p className="text-gray-500 mt-1">
                   {filter !== 'all' 
-                    ? 'Tente mudar os filtros ou verificar mais tarde' 
-                    : 'Você não possui notificações no momento'}
+                    ? t('notifications.empty.filtered') 
+                    : t('notifications.empty.all')}
                 </p>
               </div>
             ) : (
@@ -247,7 +251,7 @@ const Notifications = () => {
                           size="sm" 
                           onClick={() => markAsRead(notification.id)}
                         >
-                          Marcar como lida
+                          {t('notifications.markRead')}
                         </Button>
                       </div>
                     )}
