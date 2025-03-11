@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -134,6 +135,30 @@
   
   .dark .btn-secondary {
     @apply bg-gray-700 hover:bg-gray-600 text-white;
+  }
+  
+  /* Fixed dark mode input and select styling */
+  .dark input,
+  .dark select,
+  .dark textarea {
+    @apply bg-gray-800 border-gray-700 text-gray-100;
+  }
+
+  .dark select option {
+    @apply bg-gray-800 text-gray-100;
+  }
+
+  /* Input placeholder color in dark mode */
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    @apply text-gray-400;
+  }
+
+  /* Improved focus state for inputs in dark mode */
+  .dark input:focus,
+  .dark select:focus,
+  .dark textarea:focus {
+    @apply border-blue-500 ring-blue-500/50;
   }
   
   /* Animation classes */

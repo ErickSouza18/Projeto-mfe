@@ -4,8 +4,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import IconInput from '../components/IconInput';
 import Button from '../components/Button';
+import { useLanguage } from '../context/LanguageContext';
 
 const Login = () => {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [credentials, setCredentials] = useState({
     cpfCnpj: '',
@@ -44,10 +46,10 @@ const Login = () => {
       </div>
       
       {/* Lado direito - Formulário de login */}
-      <div className="w-full md:w-1/2 bg-white flex flex-col items-center justify-center p-8 animate-slide-in">
+      <div className="w-full md:w-1/2 bg-white dark:bg-gray-800 flex flex-col items-center justify-center p-8 animate-slide-in">
         <div className="w-full max-w-md">
-          <h2 className="text-3xl font-bold text-center mb-2">LOGIN</h2>
-          <p className="text-gray-600 text-center mb-8">Bem-vindo de volta!</p>
+          <h2 className="text-3xl font-bold text-center mb-2 dark:text-white">LOGIN</h2>
+          <p className="text-gray-600 dark:text-gray-300 text-center mb-8">Bem-vindo de volta!</p>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <IconInput 
@@ -71,7 +73,7 @@ const Login = () => {
             />
             
             <div className="text-right">
-              <Link to="/forgot-password" className="text-sm text-gray-600 hover:text-blue-500">
+              <Link to="/forgot-password" className="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400">
                 Esqueceu sua senha?
               </Link>
             </div>
@@ -88,7 +90,7 @@ const Login = () => {
           </form>
           
           <div className="mt-8 text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               Ainda não possui uma conta?{' '}
               <Link to="/register" className="text-blue-500 hover:underline">
                 Cadastre-se
